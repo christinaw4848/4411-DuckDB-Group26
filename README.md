@@ -7,3 +7,9 @@ We are performing a system analysis of DuckDB, a database management system. We 
 * Integration with CSV files
 
 We also compare DuckDB to another relational database management system, SQLite, in a case study to highlight the advantages and disadvantages of each system, the primary uses for each and their contrasting workloads, and how their tools and features compare.
+
+Run
+```
+pip install -r requirements.txt
+```
+to ensure all dependencies are installed before running the code.
