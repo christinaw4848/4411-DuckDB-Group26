@@ -13,3 +13,9 @@ Run
 pip install -r requirements.txt
 ```
 to ensure all dependencies are installed before running the code.
+
+Run 
+```
+python duckdb_data.py
+```
+to make sure the database tables are created correctly.
