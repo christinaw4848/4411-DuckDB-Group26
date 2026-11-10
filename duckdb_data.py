@@ -44,5 +44,8 @@ db.sql("SELECT * FROM WorldCup2026TeamStats LIMIT 5").show() # Check if the tabl
 
 
 
+db.sql("CREATE TABLE IF NOT EXISTS players AS SELECT * FROM read_csv('data/fifa_world_cup_2026_player_performance.csv');")
+db.sql("SELECT * FROM players WHERE age>26 LIMIT 5").show()
+       
 
 db.close()
