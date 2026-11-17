@@ -3,12 +3,6 @@ import time
 
 db = duckdb.connect("soccer_database.duckdb")
 
-
-rel = db.table("players")
-
-for col, dtype in zip(rel.columns, rel.dtypes):
-    print(f"{col}: {dtype}")
-
 TABLE = "players"
 
 
@@ -18,22 +12,42 @@ rewriter_disabled = db.sql("""
     SELECT string_agg(name, ',')
     FROM duckdb_optimizers()
     WHERE name != 'expression_rewriter'
-""").fetchone()
+""").fetchall()[0]
 
 # Queries that test five different rewrite rules of DuckDB's expression rewriter
 queries = {
-      "1: Distributivity Rule": f"""
+    "1: Distributivity Rule": f"""
         SELECT count(*)
         FROM {TABLE}
         WHERE (nationality LIKE '%Brazil%' AND total_passes > 30 AND pass_accuracy > 0.85)
            OR (nationality LIKE '%Brazil%' AND goals >= 1)
     """,
-
+    "2: Case Simplification Rule": f"""
+        SELECT sum(
+            CASE
+                WHEN 4 = 4 THEN (tournament_rating * 10)
+                ELSE ROUND(total_minutes_tournament / 90)::int
+            END
+        )
+        FROM {TABLE}
+    """,
+    "3: Move Constants Rule": f"""
+        SELECT position, AVG(player_rating)
+        FROM {TABLE}
+        WHERE (minutes_played * 2) + 10 >= 150 AND market_value_eur - 1000000 > 5000000
+        GROUP BY position
+    """,
+    "4: Ordered Aggregate Optimizer Rule": f"""
+        SELECT AVG(pass_accuracy ORDER BY successful_passes DESC)
+        FROM {TABLE}
+    """,
+    "5: Regex Optimization Rule": f"""
+        SELECT COUNT(*), SUM(goals)
+        FROM {TABLE}
+        WHERE REGEXP_MATCHES(player_name, '^Lio')
+        OR REGEXP_MATCHES(team, 'land$')
+    """,
 }
-
-# db.execute(f"SET disabled_optimizers = '{disabled}'")
-# db.execute("PRAGMA explain_output = 'optimized_only'")
-# print(db.sql("EXPLAIN SELECT 2 + 2").fetchone()[1])
 
 
 
@@ -53,16 +67,18 @@ for rule_name, sql in queries.items():
 
     # Before: Disable expression_rewriter
     db.execute("SET disabled_optimizers = 'expression_rewriter';")
-    plan_before = db.sql(f"EXPLAIN {sql}").fetchone()
+    plan_before = db.sql(f"EXPLAIN {sql}").fetchall()[0][1]
     ms_before = avg_ms(sql)
 
     # After: Enable expression_rewriter (maybe also switch '' with all_except_rewriter to run it on its own??)
     db.execute("SET disabled_optimizers = '';")
-    plan_after = db.sql(f"EXPLAIN {sql}").fetchone()
+    plan_after = db.sql(f"EXPLAIN {sql}").fetchall()[0][1]
     ms_after = avg_ms(sql)
 
-    print(f"Time BEFORE: {ms_before:6.2f} ms | Time AFTER: {ms_after:6.2f} ms ({ms_before / ms_after:.2f}x)")
+    print(
+        f"Time BEFORE: {ms_before:6.2f} ms | Time AFTER: {ms_after:6.2f} ms ({ms_before / ms_after:.2f}x)"
+    )
     print("\n[Plan BEFORE]")
-    print(plan_before.strip())
+    print(plan_before)
     print("\n[Plan AFTER]")
-    print(plan_after.strip())
+    print(plan_after)
