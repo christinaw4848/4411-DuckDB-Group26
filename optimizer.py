@@ -60,7 +60,6 @@ def avg_ms(sql: str, runs: int = 20) -> float:
 
 db.execute("PRAGMA explain_output = 'optimized_only';")
 
-
 for rule_name, sql in queries.items():
     print("=" * 50)
     print(f"RULE {rule_name}")
@@ -72,6 +71,35 @@ for rule_name, sql in queries.items():
 
     # After: Enable expression_rewriter (maybe also switch '' with all_except_rewriter to run it on its own??)
     db.execute("SET disabled_optimizers = '';")
+    plan_after = db.sql(f"EXPLAIN {sql}").fetchall()[0][1]
+    ms_after = avg_ms(sql)
+
+    print(
+        f"Time BEFORE: {ms_before:6.2f} ms | Time AFTER: {ms_after:6.2f} ms ({ms_before / ms_after:.2f}x)"
+    )
+    print("\n[Plan BEFORE]")
+    print(plan_before)
+    print("\n[Plan AFTER]")
+    print(plan_after)
+
+
+# Example 3: Disable and re-enable all optimizers and run a query with each to see the effect on execution time
+queries = {
+    
+}
+
+
+for rule_name, sql in queries.items():
+    print("=" * 50)
+    print(f"RULE {rule_name}")
+
+    # Before: All optimizers disabled
+    db.execute("PRAGMA disable_optimizer;")
+    plan_before = db.sql(f"EXPLAIN {sql}").fetchall()[0][1]
+    ms_before = avg_ms(sql)
+
+    # After: All optimizers enabled
+    db.execute("PRAGMA enable_optimizer;")
     plan_after = db.sql(f"EXPLAIN {sql}").fetchall()[0][1]
     ms_after = avg_ms(sql)
 
