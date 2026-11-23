@@ -1,3 +1,9 @@
+"""
+Author: Christina
+
+Demonstrates the performance impact of various DuckDB optimizers by running queries with and without specific optimizers enabled. 
+It measures execution time, peak memory usage, temporary disk usage, and intermediate row counts, providing a comparison of query performance before and after enabling optimizations.
+"""
 import duckdb
 import time
 import json
@@ -132,8 +138,6 @@ def print_results(title: str, sql: str, after_optimizers):
 
 
 # Example 1: Analysis of DuckDB's expression rewriter optimization, comparing execution time with and without the expression rewriter optimizer
-
-# Queries that test five different rewrite rules of DuckDB's expression rewriter
 queries = {
     "1: Distributivity Rule": f"""
         SELECT count(*)
@@ -180,34 +184,6 @@ queries = {
 for name, sql in queries.items():
     print_results(name, sql, after_optimizers=["expression_rewriter"])
 
-# db.execute("PRAGMA explain_output = 'optimized_only';")
-
-# for rule_name, sql in queries.items():
-#     print("=" * 50)
-#     print(f"RULE {rule_name}")
-
-#     # Before: Disable expression_rewriter
-#     # db.execute("SET disabled_optimizers = 'expression_rewriter';")
-#     db.execute("PRAGMA disable_optimizer;")
-
-#     plan_before = db.sql(f"EXPLAIN {sql}").fetchall()[0][1]
-#     ms_before = avg_ms(sql)
-
-#     # After: Enable expression_rewriter (maybe also switch '' with all_except_rewriter to run it on its own??)
-#     # db.execute("SET disabled_optimizers = '';")
-#     db.execute("PRAGMA enable_optimizer;")
-#     db.execute(f"SET disabled_optimizers = '{rewriter_disabled}'")
-#     plan_after = db.sql(f"EXPLAIN {sql}").fetchall()[0][1]
-#     ms_after = avg_ms(sql)
-
-#     print(
-#         f"Time BEFORE: {ms_before:6.2f} ms | Time AFTER: {ms_after:6.2f} ms ({ms_before / ms_after:.2f}x)"
-#     )
-#     print("\n[Plan BEFORE]")
-#     print(plan_before)
-#     print("\n[Plan AFTER]")
-#     print(plan_after)
-
 # Example 2: Filter pullup/filter pushdown optimziation, comparing execution time with and without the filter pull and push optimizers
 queries = {
     "Filter Pullup/Pushdown Example 1: ": f"""
@@ -235,33 +211,6 @@ queries = {
 for name, sql in queries.items():
     print_results(name, sql, after_optimizers=["filter_pullup", "filter_pushdown"])
 
-
-# db.execute("PRAGMA explain_output = 'optimized_only';")
-
-# for rule_name, sql in queries.items():
-#     print("=" * 50)
-#     print(f"{rule_name}")
-
-#     # Before: Disable all optimizers
-#     db.execute("PRAGMA disable_optimizer;")
-#     plan_before = db.sql(f"EXPLAIN {sql}").fetchall()[0][1]
-#     ms_before = avg_ms(sql)
-
-#     # After: Enable pullup and pushdown optimizers
-#     db.execute("PRAGMA enable_optimizer;")
-#     db.execute(f"SET disabled_optimizers = '{filter_disabled}'")
-#     plan_after = db.sql(f"EXPLAIN {sql}").fetchall()[0][1]
-#     ms_after = avg_ms(sql)
-
-#     print(
-#         f"Time BEFORE: {ms_before:6.2f} ms | Time AFTER: {ms_after:6.2f} ms ({ms_before / ms_after:.2f}x)"
-#     )
-#     print("\n[Plan BEFORE]")
-#     print(plan_before)
-#     print("\n[Plan AFTER]")
-#     print(plan_after)
-
-
 # Example 3: Join reordering optimization
 queries = {
     "Join Reordering Example: ": f"""
@@ -277,7 +226,6 @@ queries = {
 
 for name, sql in queries.items():
     print_results(name, sql, after_optimizers=["join_order"])
-
 
 # Example 4: Disable and re-enable all optimizers and run a query with each to see the effect on execution time
 queries = {
@@ -314,26 +262,3 @@ queries = {
 
 for name, sql in queries.items():
     print_results(name, sql, after_optimizers="ALL")
-
-
-# for rule_name, sql in queries.items():
-#     print("=" * 50)
-#     print(f"{rule_name}")
-
-#     # Before: All optimizers disabled
-#     db.execute("PRAGMA disable_optimizer;")
-#     plan_before = db.sql(f"EXPLAIN {sql}").fetchall()[0][1]
-#     ms_before = avg_ms(sql)
-
-#     # After: All optimizers enabled
-#     db.execute("PRAGMA enable_optimizer;")
-#     plan_after = db.sql(f"EXPLAIN {sql}").fetchall()[0][1]
-#     ms_after = avg_ms(sql)
-
-#     print(
-#         f"Time BEFORE: {ms_before:6.2f} ms | Time AFTER: {ms_after:6.2f} ms ({ms_before / ms_after:.2f}x)"
-#     )
-#     print("\n[Plan BEFORE]")
-#     print(plan_before)
-#     print("\n[Plan AFTER]")
-#     print(plan_after)
