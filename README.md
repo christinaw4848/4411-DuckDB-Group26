@@ -27,3 +27,11 @@ Run
 python duckdb_data.py
 ```
 to make sure the database tables are created correctly.
+
+To view supporting code for DuckDB features:
+
+Run
+```
+python optimizer.py
+```
+to run tests for DuckDB's optimizers.
